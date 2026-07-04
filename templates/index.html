@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<div class="card shadow-lg">
+
+    <div class="card-body">
+
+        <h3 class="mb-3">
+
+            <i class="bi bi-phone"></i>
+
+            Mobile Number Search
+
+        </h3>
+
+        <form action="/search" method="POST">
+
+            <div class="input-group input-group-lg">
+
+                <input
+                    type="text"
+                    class="form-control"
+                    name="phone"
+                    placeholder="+639171234567 or 09171234567"
+                    required>
+
+                <button class="btn btn-primary">
+
+                    <i class="bi bi-search"></i>
+
+                    Search
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<br>
+
+<div class="row">
+
+    <div class="col-md-4">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <h5>🌐 Public Search</h5>
+
+                <p>Search public web pages mentioning the phone number.</p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-4">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <h5>📱 Social Platforms</h5>
+
+                <p>Quick links to official services for manual verification.</p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-4">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <h5>📄 Report</h5>
+
+                <p>Generate an investigation summary from collected public information.</p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

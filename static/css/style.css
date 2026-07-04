@@ -1,0 +1,20 @@
+body{
+    background:#f4f6f9;
+}
+
+.card{
+    border-radius:15px;
+}
+
+.card:hover{
+    transform:translateY(-3px);
+    transition:.3s;
+}
+
+.navbar{
+    padding:15px;
+}
+
+input{
+    height:55px;
+}

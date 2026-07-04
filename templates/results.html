@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card shadow">
+
+    <div class="card-body">
+
+        <h2>📱 Investigation Report</h2>
+
+        <hr>
+
+        <h4>{{ report.phone }}</h4>
+
+    </div>
+
+</div>
+
+<br>
+
+<div class="card shadow">
+
+    <div class="card-header">
+
+        🔍 Google Dorks
+
+    </div>
+
+    <div class="list-group list-group-flush">
+
+        {% for item in report.google %}
+
+        <a
+            href="{{ item.url }}"
+            target="_blank"
+            class="list-group-item list-group-item-action">
+
+            {{ item.title }}
+
+        </a>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+<br>
+
+<div class="card shadow">
+
+    <div class="card-header">
+
+        🌐 Official Resources
+
+    </div>
+
+    <div class="list-group list-group-flush">
+
+        {% for item in report.social %}
+
+        <a
+            href="{{ item.url }}"
+            target="_blank"
+            class="list-group-item list-group-item-action">
+
+            {{ item.name }}
+
+        </a>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}
