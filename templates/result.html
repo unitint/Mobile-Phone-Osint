@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - Phone OSINT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <span class="navbar-brand">
+                <span>📱</span> PHONE <span>OSINT</span>
+            </span>
+            <a href="/" class="btn-back">
+                <i class="fas fa-arrow-left"></i> New Search
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 offset-lg-1">
+                
+                <div class="result-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                        <div>
+                            <div class="result-title">
+                                <i class="fas fa-phone-alt"></i> Investigation Results
+                            </div>
+                            <div class="result-number">
+                                {{ report.phone }}
+                            </div>
+                        </div>
+                        <div>
+                            <button onclick="copyPhoneNumber('{{ report.phone }}')" 
+                                    class="btn-back" style="cursor: pointer;">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <hr style="border-color: rgba(0,240,255,0.1); margin: 25px 0;">
+
+                    <!-- Phone Info -->
+                    {% if report.phone_info %}
+                    <div style="margin: 20px 0; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 15px;">
+                        <h5 style="font-family: 'Orbitron', monospace; font-size: 0.9rem; color: var(--secondary); margin-bottom: 15px;">
+                            <i class="fas fa-info-circle"></i> Phone Number Info
+                        </h5>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                            <div><strong>Country:</strong> {{ report.phone_info.country }}</div>
+                            <div><strong>Carrier:</strong> {{ report.phone_info.carrier }}</div>
+                            <div><strong>Location:</strong> {{ report.phone_info.location }}</div>
+                            <div><strong>Valid:</strong> {{ report.phone_info.valid }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Search Variations -->
+                    <div style="margin: 20px 0; padding: 20px; background: rgba(0,240,255,0.05); border-radius: 15px; border: 1px solid rgba(0,240,255,0.1);">
+                        <h5 style="font-family: 'Orbitron', monospace; font-size: 0.9rem; color: var(--primary); margin-bottom: 15px;">
+                            <i class="fas fa-search"></i> All Search Variations ({{ report.search_variations|length }})
+                        </h5>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                            {% for variation in report.search_variations[:20] %}
+                            <span style="background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1); font-family: monospace;">
+                                {{ variation }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <hr style="border-color: rgba(0,240,255,0.1); margin: 25px 0;">
+
+                    <!-- Google Results -->
+                    <h4 style="font-family: 'Orbitron', monospace; font-size: 1rem; color: var(--primary); margin: 25px 0 15px 0;">
+                        <i class="fab fa-google"></i> Google Results ({{ report.google.total_results }} found)
+                    </h4>
+
+                    {% if report.google.unique_links %}
+                        <div class="google-results">
+                            {% for result in report.google.unique_links[:20] %}
+                            <div class="google-result-item">
+                                <a href="{{ result.link }}" target="_blank">
+                                    <i class="fas fa-external-link-alt" style="font-size: 0.8rem; margin-right: 10px;"></i>
+                                    {{ result.title }}
+                                </a>
+                                {% if result.snippet %}
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 5px 0 0 25px; opacity: 0.8;">
+                                    {{ result.snippet[:150] }}...
+                                </p>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% if report.google.total_results > 20 %}
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; text-align: center; margin-top: 10px;">
+                            + {{ report.google.total_results - 20 }} more results
+                        </p>
+                        {% endif %}
+                    {% else %}
+                        <p style="color: var(--text-secondary); font-style: italic;">
+                            <i class="fas fa-search"></i> No Google results found for any variation
+                        </p>
+                    {% endif %}
+                    
+                    <hr style="border-color: rgba(0,240,255,0.1); margin: 25px 0;">
+                    
+                    <!-- Social Media Results -->
+                    <h4 style="font-family: 'Orbitron', monospace; font-size: 1rem; color: var(--primary); margin-bottom: 15px;">
+                        <i class="fas fa-users"></i> Social Media Presence
+                    </h4>
+                    
+                    <div class="platform-grid">
+                        {% for social in report.social %}
+                        <div class="platform-card">
+                            <div class="platform-icon">{{ social.icon }}</div>
+                            <div class="platform-name">{{ social.name }}</div>
+                            <span class="platform-status status-check">
+                                🔍 CHECK MANUALLY
+                            </span>
+                            <br>
+                            <a href="{{ social.url }}" target="_blank" 
+                               style="color: var(--primary); text-decoration: none; font-size: 0.85rem; display: inline-block; margin-top: 10px;">
+                                <i class="fas fa-external-link-alt"></i> Visit {{ social.name }}
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                </div>
+                
+                <div style="text-align: center; padding: 30px 0; color: var(--text-secondary); font-size: 0.8rem; letter-spacing: 2px;">
+                    <i class="fas fa-shield-alt"></i> For educational purposes only
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

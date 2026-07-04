@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request
-from modules.google_search import google_dorks
 from modules.phone_parser import normalize_phone
 from modules.osint_engine import investigate
 
@@ -13,18 +12,16 @@ def home():
 
 @app.route("/search", methods=["POST"])
 def search():
-
     phone = request.form["phone"]
-
     normalized = normalize_phone(phone)
 
     if normalized is None:
-        return "Invalid Phone Number"
+        return render_template("index.html", error="Invalid Phone Number")
 
     report = investigate(normalized)
 
     return render_template(
-        "results.html",
+        "result.html",
         report=report
     )
 
