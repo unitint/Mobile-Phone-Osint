@@ -1,2 +1,36 @@
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+venv/
+env/
+.env
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Flask
+instance/
+.wsgi-*
+
+# Logs
+*.log
+*.log.*
+
+# Reports
+report_*.json
+report_*.csv
+report_*.pdf
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Selenium
+geckodriver.log
+chromedriver.log

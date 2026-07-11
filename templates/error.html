@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Error - Phone OSINT{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="hero-card" style="text-align: center; padding: 50px;">
+            <div style="font-size: 4rem; margin-bottom: 20px;">😵</div>
+            <h2 class="hero-title" style="font-size: 2rem;">Oops!</h2>
+            <p style="color: var(--text-secondary); font-size: 1.2rem; margin: 20px 0;">
+                {{ error }}
+            </p>
+            <a href="/" class="btn-submit" style="display: inline-block; padding: 15px 40px; width: auto; text-decoration: none;">
+                <i class="fas fa-home"></i> Go Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

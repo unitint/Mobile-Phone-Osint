@@ -103,3 +103,121 @@ function showToast(message) {
         setTimeout(() => toast.remove(), 400);
     }, 3000);
 }
+
+// ===== Loading Functions =====
+function showLoading() {
+    const spinner = document.getElementById('loadingSpinner');
+    if (spinner) spinner.classList.add('active');
+}
+
+function hideLoading() {
+    const spinner = document.getElementById('loadingSpinner');
+    if (spinner) spinner.classList.remove('active');
+}
+
+// ===== Form Submit Handler =====
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('searchForm');
+    const searchBtn = document.getElementById('searchBtn');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Show loading
+            showLoading();
+            
+            // Disable button to prevent double submission
+            if (searchBtn) {
+                searchBtn.disabled = true;
+                searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+            }
+            
+            // Re-enable after 60 seconds (safety)
+            setTimeout(() => {
+                hideLoading();
+                if (searchBtn) {
+                    searchBtn.disabled = false;
+                    searchBtn.innerHTML = '<i class="fas fa-robot"></i> Investigate';
+                }
+            }, 60000);
+        });
+    }
+});
+
+// ===== Keyboard Shortcut: Ctrl+Enter =====
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        const form = document.getElementById('searchForm');
+        if (form) form.submit();
+    }
+});
+
+// ===== Debounce Function =====
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// ===== Improved Input Validation with Debounce =====
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('phoneInput');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', debounce(function() {
+            let value = this.value.replace(/[^\d+]/g, '');
+            this.value = value;
+            
+            // Visual feedback
+            if (value.length > 3) {
+                this.style.borderColor = 'rgba(0, 240, 255, 0.6)';
+                this.style.boxShadow = '0 0 30px rgba(0, 240, 255, 0.1)';
+            } else if (value.length > 0) {
+                this.style.borderColor = 'rgba(255, 200, 0, 0.4)';
+            } else {
+                this.style.borderColor = 'rgba(0, 240, 255, 0.2)';
+                this.style.boxShadow = 'none';
+            }
+        }, 300));
+        
+        // Auto-submit on Enter
+        phoneInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.length > 3) {
+                const form = document.getElementById('searchForm');
+                if (form) form.submit();
+            }
+        });
+    }
+});
+
+// ===== Particle Count Optimization =====
+function createParticles() {
+    const particlesContainer = document.createElement('div');
+    particlesContainer.className = 'particles';
+    document.body.prepend(particlesContainer);
+    
+    // Reduce particles on mobile
+    const particleCount = window.innerWidth < 768 ? 25 : 50;
+    const colors = ['#00f0ff', '#7c4dff', '#ff6b6b', '#00ff64', '#ffc800'];
+    
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        const size = Math.random() * 4 + 2;
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDuration = (Math.random() * 20 + 15) + 's';
+        particle.style.animationDelay = (Math.random() * 20) + 's';
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.opacity = Math.random() * 0.3 + 0.1;
+        particlesContainer.appendChild(particle);
+    }
+}
+
+// ===== Toast Notification (existing, keep as is) =====
+// ... keep your existing showToast function

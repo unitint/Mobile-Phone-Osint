@@ -21,7 +21,7 @@ def investigate(phone):
     phone_info = get_phone_info(normalized)
     
     # Search DuckDuckGo for ALL variations
-    all_google_links = []
+    all_search_links = []
     seen_links = set()
     
     print("🦆 Starting DuckDuckGo searches...")
@@ -35,7 +35,7 @@ def investigate(phone):
             link = item.get('link', '')
             if link and link not in seen_links:
                 seen_links.add(link)
-                all_google_links.append(item)
+                all_search_links.append(item)
     
     time.sleep(2)
     
@@ -50,7 +50,7 @@ def investigate(phone):
                     link = item.get('link', '')
                     if link and link not in seen_links:
                         seen_links.add(link)
-                        all_google_links.append(item)
+                        all_search_links.append(item)
             
             time.sleep(2)
     
@@ -93,16 +93,16 @@ def investigate(phone):
         "exact_number": exact_number,
         "phone_info": phone_info,
         "search_variations": search_terms[:20],
-        "google": {  # Keeping this name for template compatibility
-            "total_results": len(all_google_links),
-            "unique_links": all_google_links[:50]
+        "search_results": {  # RENAMED from 'google' to 'search_results'
+            "total_results": len(all_search_links),
+            "unique_links": all_search_links[:50]
         },
         "social": social_media,
         "summary": {
             "total_search_terms": len(search_terms),
-            "google_matches": len(all_google_links)
+            "search_matches": len(all_search_links)  # RENAMED
         }
     }
     
-    print(f"\n✅ Total results found: {len(all_google_links)}")
+    print(f"\n✅ Total results found: {len(all_search_links)}")
     return report
