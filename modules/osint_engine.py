@@ -1,58 +1,95 @@
 import time
 from modules.duckduckgo_search import search_duckduckgo
-from modules.phone_parser import get_all_search_terms, get_phone_info, normalize_phone
+from modules.phone_parser import normalize_phone, get_phone_info
+from modules.link_classifier import process_result, get_summary
 
 
 def investigate(phone):
-    """Main investigation function using DuckDuckGo"""
+    """Main investigation function - tracks each variation"""
     
     # Normalize the phone first
     normalized = normalize_phone(phone)
     if not normalized:
         return {"error": "Invalid phone number"}
     
-    # Get ALL search variations
-    search_terms = get_all_search_terms(normalized)
-    
-    # Get the exact number
+    # Get the exact number (remove formatting)
     exact_number = phone.replace('+', '').replace('-', '').replace(' ', '').replace('(', '').replace(')', '')
     
     # Get phone info
     phone_info = get_phone_info(normalized)
     
-    # Search DuckDuckGo for ALL variations
-    all_search_links = []
+    # Define the variations we want to check
+    variations_to_check = [
+        f'"{exact_number}"',                    # "09946563099"
+        exact_number,                            # 09946563099
+        f'"{exact_number[:4]} {exact_number[4:7]} {exact_number[7:]}"',  # "0994 656 3099"
+        f'"{exact_number[:4]}-{exact_number[4:7]}-{exact_number[7:]}"',  # "0994-656-3099"
+        f'"+63{exact_number[1:]}"',              # "+639946563099"
+        f'{exact_number[:4]} {exact_number[4:7]} {exact_number[7:]}',    # 0994 656 3099
+        f'{exact_number[:4]}-{exact_number[4:7]}-{exact_number[7:]}',    # 0994-656-3099
+        f'+63{exact_number[1:]}',                # +639946563099
+        f'63{exact_number[1:]}',                 # 639946563099
+    ]
+    
+    print(f"\n🎯 Searching for: {exact_number}")
+    print(f"🔍 Using {len(variations_to_check)} variations\n")
+    
+    # ===== SEARCH EACH VARIATION =====
+    variation_results = []
+    all_links = []
     seen_links = set()
     
-    print("🦆 Starting DuckDuckGo searches...")
-    
-    # First search with exact number quoted (for exact match)
-    print(f"\n🔍 PRIMARY SEARCH: \"{exact_number}\"")
-    result = search_duckduckgo(f'"{exact_number}"')
-    
-    if result.get('found'):
-        for item in result.get('results', []):
-            link = item.get('link', '')
-            if link and link not in seen_links:
-                seen_links.add(link)
-                all_search_links.append(item)
-    
-    time.sleep(2)
-    
-    # Search with each variation
-    for term in search_terms[:5]:  # Limit to avoid issues
-        if term not in [f'"{exact_number}"', exact_number]:
-            print(f"\n🔍 Searching: {term}")
-            result = search_duckduckgo(term)
+    for i, term in enumerate(variations_to_check, 1):
+        print(f"[{i}/{len(variations_to_check)}] 🔍 Searching: {term}")
+        
+        result = search_duckduckgo(term)
+        
+        variation_data = {
+            "term": term,
+            "found": result.get('found', False),
+            "count": result.get('count', 0),
+            "links": []
+        }
+        
+        if result.get('found'):
+            for item in result.get('results', []):
+                link = item.get('link', '')
+                if link and link not in seen_links:
+                    seen_links.add(link)
+                    all_links.append(item)
+                    variation_data["links"].append(item)
             
-            if result.get('found'):
-                for item in result.get('results', []):
-                    link = item.get('link', '')
-                    if link and link not in seen_links:
-                        seen_links.add(link)
-                        all_search_links.append(item)
-            
-            time.sleep(2)
+            variation_data["count"] = len(variation_data["links"])
+        
+        variation_results.append(variation_data)
+        
+        print(f"   ✅ Found {variation_data['count']} links")
+        
+        time.sleep(1.5)  # Delay between searches
+    
+    # ===== CLASSIFY ALL UNIQUE LINKS =====
+    print("\n🔍 Classifying all unique results...")
+    
+    classified_results = []
+    for link in all_links:
+        processed = process_result(link)
+        classified_results.append(processed)
+    
+    # Sort by score
+    classified_results.sort(key=lambda x: x.get('score', 0), reverse=True)
+    
+    # Generate summary
+    summary = get_summary(classified_results)
+    
+    # Calculate totals
+    total_variations = len(variation_results)
+    total_with_results = sum(1 for v in variation_results if v['count'] > 0)
+    total_links = len(all_links)
+    
+    print(f"\n📊 SUMMARY:")
+    print(f"   Total variations: {total_variations}")
+    print(f"   Variations with results: {total_with_results}")
+    print(f"   Total unique links: {total_links}")
     
     # Social media platforms
     social_media = [
@@ -60,28 +97,24 @@ def investigate(phone):
             "name": "Facebook",
             "icon": "📘",
             "url": f"https://www.facebook.com/search/top/?q={exact_number}",
-            "search_url": f"https://www.facebook.com/search/top/?q={exact_number}",
-            "found": False
+            "found": any('facebook' in s.get('url', '').lower() for s in classified_results)
         },
         {
             "name": "Instagram",
             "icon": "📸",
-            "url": "https://www.instagram.com/accounts/password/reset/",
-            "search_url": f"https://www.google.com/search?q=site:instagram.com+{exact_number}",
-            "found": False
+            "url": f"https://www.instagram.com/explore/search/?q={exact_number}",
+            "found": any('instagram' in s.get('url', '').lower() for s in classified_results)
         },
         {
             "name": "WhatsApp",
             "icon": "💬",
             "url": f"https://wa.me/{exact_number}",
-            "search_url": f"https://wa.me/{exact_number}",
             "found": False
         },
         {
             "name": "Telegram",
             "icon": "✈️",
             "url": "https://t.me/",
-            "search_url": f"https://www.google.com/search?q=site:t.me+{exact_number}",
             "found": False
         }
     ]
@@ -89,20 +122,17 @@ def investigate(phone):
     # Build report
     report = {
         "phone": normalized,
-        "original_input": phone,
         "exact_number": exact_number,
         "phone_info": phone_info,
-        "search_variations": search_terms[:20],
-        "search_results": {  # RENAMED from 'google' to 'search_results'
-            "total_results": len(all_search_links),
-            "unique_links": all_search_links[:50]
-        },
+        "variations": variation_results,  # Each variation with its count
+        "classified_results": classified_results[:30],
+        "summary": summary,
         "social": social_media,
-        "summary": {
-            "total_search_terms": len(search_terms),
-            "search_matches": len(all_search_links)  # RENAMED
+        "metadata": {
+            "total_variations": total_variations,
+            "variations_with_results": total_with_results,
+            "total_unique_links": total_links
         }
     }
     
-    print(f"\n✅ Total results found: {len(all_search_links)}")
     return report
