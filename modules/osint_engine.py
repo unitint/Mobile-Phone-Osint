@@ -4,7 +4,7 @@ from modules.phone_parser import normalize_phone, get_phone_info
 from modules.link_classifier import process_result, get_summary
 
 
-def investigate(phone):
+def investigate(phone, raw_input=None):
     """Main investigation function - tracks each variation"""
     
     # Normalize the phone first
@@ -12,26 +12,51 @@ def investigate(phone):
     if not normalized:
         return {"error": "Invalid phone number"}
     
-    # Get the exact number (remove formatting)
-    exact_number = phone.replace('+', '').replace('-', '').replace(' ', '').replace('(', '').replace(')', '')
-    
     # Get phone info
     phone_info = get_phone_info(normalized)
     
-    # Define the variations we want to check
+    # ===== USE THE RAW INPUT (what user typed) =====
+    # If raw_input is provided, use it. Otherwise use phone.
+    if raw_input:
+        original_input = raw_input.strip()
+    else:
+        original_input = phone.strip()
+    
+    # Clean the number to get digits only for formatting
+    clean_number = original_input.replace('+', '').replace('-', '').replace(' ', '').replace('(', '').replace(')', '').strip()
+    
+    # ===== ONLY 4 FORMATS =====
+    # Format 1: Plain number (09623293747) - KEEP THE ORIGINAL WITH 0
+    plain = original_input
+    
+    # Format 2: International with +63 (+639623293747)
+    # Remove leading 0 and add +63
+    if clean_number.startswith('0'):
+        international = f'+63{clean_number[1:]}'
+    else:
+        international = f'+63{clean_number}'
+    
+    # Format 3: With spaces (0962 329 3747) - KEEP THE ORIGINAL WITH 0
+    if len(clean_number) >= 11 and clean_number.startswith('0'):
+        spaces = f'{clean_number[:4]} {clean_number[4:7]} {clean_number[7:]}'
+    else:
+        spaces = original_input
+    
+    # Format 4: With dashes (0962-329-3747) - KEEP THE ORIGINAL WITH 0
+    if len(clean_number) >= 11 and clean_number.startswith('0'):
+        dashes = f'{clean_number[:4]}-{clean_number[4:7]}-{clean_number[7:]}'
+    else:
+        dashes = original_input
+    
+    # Build the variations list (ONLY 4) - WITH THE 0 INTACT
     variations_to_check = [
-        f'"{exact_number}"',                    # "09946563099"
-        exact_number,                            # 09946563099
-        f'"{exact_number[:4]} {exact_number[4:7]} {exact_number[7:]}"',  # "0994 656 3099"
-        f'"{exact_number[:4]}-{exact_number[4:7]}-{exact_number[7:]}"',  # "0994-656-3099"
-        f'"+63{exact_number[1:]}"',              # "+639946563099"
-        f'{exact_number[:4]} {exact_number[4:7]} {exact_number[7:]}',    # 0994 656 3099
-        f'{exact_number[:4]}-{exact_number[4:7]}-{exact_number[7:]}',    # 0994-656-3099
-        f'+63{exact_number[1:]}',                # +639946563099
-        f'63{exact_number[1:]}',                 # 639946563099
+        plain,          # 09623293747
+        international,  # +639623293747
+        spaces,         # 0962 329 3747
+        dashes,         # 0962-329-3747
     ]
     
-    print(f"\n🎯 Searching for: {exact_number}")
+    print(f"\n🎯 Searching for: {plain}")
     print(f"🔍 Using {len(variations_to_check)} variations\n")
     
     # ===== SEARCH EACH VARIATION =====
@@ -96,19 +121,19 @@ def investigate(phone):
         {
             "name": "Facebook",
             "icon": "📘",
-            "url": f"https://www.facebook.com/search/top/?q={exact_number}",
+            "url": f"https://www.facebook.com/search/top/?q={plain}",
             "found": any('facebook' in s.get('url', '').lower() for s in classified_results)
         },
         {
             "name": "Instagram",
             "icon": "📸",
-            "url": f"https://www.instagram.com/explore/search/?q={exact_number}",
+            "url": f"https://www.instagram.com/explore/search/?q={plain}",
             "found": any('instagram' in s.get('url', '').lower() for s in classified_results)
         },
         {
             "name": "WhatsApp",
             "icon": "💬",
-            "url": f"https://wa.me/{exact_number}",
+            "url": f"https://wa.me/{plain}",
             "found": False
         },
         {
@@ -122,9 +147,9 @@ def investigate(phone):
     # Build report
     report = {
         "phone": normalized,
-        "exact_number": exact_number,
+        "exact_number": plain,
         "phone_info": phone_info,
-        "variations": variation_results,  # Each variation with its count
+        "variations": variation_results,
         "classified_results": classified_results[:30],
         "summary": summary,
         "social": social_media,

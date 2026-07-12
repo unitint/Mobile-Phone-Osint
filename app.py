@@ -23,20 +23,23 @@ def home():
 
 @app.route("/search", methods=["POST"])
 def search():
-    phone = request.form.get("phone", "").strip()
-    logger.info(f"🔍 Searching for phone: {phone}")
+    # Get the RAW input from user (preserve the 0)
+    raw_phone = request.form.get("phone", "").strip()
+    logger.info(f"🔍 Raw input: {raw_phone}")
     
-    if not phone:
+    if not raw_phone:
         return render_template("index.html", error="Please enter a phone number")
     
-    normalized = normalize_phone(phone)
+    # Normalize for validation
+    normalized = normalize_phone(raw_phone)
 
     if normalized is None:
-        return render_template("index.html", error="Invalid Phone Number. Please enter a valid number (e.g., 09946563099)")
+        return render_template("index.html", error="Invalid Phone Number. Please enter a valid number (e.g., 09623293747)")
 
     try:
-        report = investigate(normalized)
-        logger.info(f"✅ Found {report.get('summary', {}).get('google_matches', 0)} results")
+        # Pass BOTH normalized and raw input
+        report = investigate(normalized, raw_input=raw_phone)
+        logger.info(f"✅ Found {report.get('metadata', {}).get('total_unique_links', 0)} results")
         return render_template("result.html", report=report)
     except Exception as e:
         logger.error(f"❌ Search error: {e}")
